@@ -14,10 +14,11 @@
 #include <sstream>
 #include <string>
 #include <iterator>
+#include <stdlib.h>
 
 #include "particle_filter.h"
 
-#define ZERO (0.0001F)
+#define ZERO (0.000001F)
 #define PI (3.141592F)
 
 using namespace std;
@@ -26,11 +27,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	// Set the number of particles. Initialize all particles to first position (based on estimates of
 	//   x, y, theta and their uncertainties from GPS) and all weights to 1. 
 	// Add random Gaussian noise to each particle.
-#if 1
-    num_particles = 20;
-#else
-    num_particles = 1;
-#endif
+    num_particles = 30;
 
     particles.resize(num_particles);
     weights.resize(num_particles);
@@ -52,7 +49,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
     }
 
 
-#if 0  // FIXME
+#if 0  // DEBUG
     particles[0].x = 4;
     particles[0].y = 5;
     particles[0].theta = -PI/2;
@@ -72,12 +69,13 @@ void ParticleFilter::printParticles() {
     cout << endl;
 }
 
+
 void ParticleFilter::prediction(double delta_t, double std_pos[], double velocity, double yaw_rate) {
-	// Update each particle's predicted pose (x, y, theta) based on the measured
+    // Update each particle's predicted pose (x, y, theta) based on the measured
     // controls (delta_t, velocity, yaw_rate) and add random Gaussian noise.
     // Using std::normal_distribution and std::default_random_engine for guassian noise:
-	//   http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
-	//   http://www.cplusplus.com/reference/random/default_random_engine/
+    //   http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
+    //   http://www.cplusplus.com/reference/random/default_random_engine/
 
     // Create normal (Gaussian) distributions for x, y & theta noise.
     normal_distribution<double> dist_x(0, std_pos[0]);
@@ -85,7 +83,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
     normal_distribution<double> dist_theta(0, std_pos[2]);
     default_random_engine gen;  // random generator for the gaussian noise distribution.
 
-    if (yaw_rate > ZERO) {
+    if (fabs(yaw_rate) > ZERO) {
         // for curved motion
         double delta_theta = yaw_rate * delta_t;    // pre-calculated for loop performance
         double huh = velocity / yaw_rate;           // pre-calculated for loop performance
@@ -145,33 +143,31 @@ void ParticleFilter::predict_landmarks(Particle particle, double sensor_range, M
         // distance from particle to map landmark
         double distance = dist(particle.x, particle.y, map.landmark_list[i].x_f, map.landmark_list[i].y_f);
         // include all landmarks that are within sensor range of the particle
-        if (distance < sensor_range) {
+//        if (distance < sensor_range) {
             // add landmark to predicted landmarks
             LandmarkObs pred;
             pred.x = map.landmark_list[i].x_f;
             pred.y = map.landmark_list[i].y_f;
             pred.id = i;    // save index to landmark list in the map.
             predicted_landmarks.push_back(pred);
-        }
+//        }
     }
 }
 
 // Transform an observation from car's perspective (relative to car) to particle's perspective (relative to map).
 LandmarkObs transform_coords(Particle particle, LandmarkObs observation) {
-#if 0 // FIXME
-    cout << "  particle    x: " << particle.x << " y: " << particle.y << endl;
+#if 0 // DEBUG
     cout << "  observation x: " << observation.x << " y: " << observation.y << endl;
 #endif
     LandmarkObs transform;
     transform.x = particle.x + (observation.x * cos(particle.theta)) - (observation.y * sin(particle.theta));
-    if (transform.x < ZERO)
-        transform.x = 0.0f;
+//    if (transform.x < ZERO)
+//        transform.x = 0.0f;
     transform.y = particle.y + observation.x * sin(particle.theta) + observation.y * cos(particle.theta);
-    if (transform.y < ZERO)
-        transform.y = 0.0f;
-#if 0 // FIXME
-    cout << "  transform   x: " << transform.x << " y: " << transform.y << endl;
-    cout << endl;
+//    if (transform.y < ZERO)
+//        transform.y = 0.0f;
+#if 0 // DEBUG
+    cout << "  transform   x: " << transform.x << " y: " << transform.y << endl << endl;
 #endif
 
     return(transform);
@@ -189,33 +185,31 @@ double measurement_prob(LandmarkObs observation, Map::single_landmark_s landmark
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
                                    std::vector<LandmarkObs> observations, Map map_landmarks) {
-	// Update the weights of each particle using a multi-variate Gaussian distribution. You can read
-	// more about this distribution here: https://en.wikipedia.org/wiki/Multivariate_normal_distribution
+    // Update the weights of each particle using a multi-variate Gaussian distribution. You can read
+	  // more about this distribution here: https://en.wikipedia.org/wiki/Multivariate_normal_distribution
     //
-	// The observations are given in the VEHICLE'S coordinate system. The particles are located
-	// according to the MAP'S coordinate system. It's necessary to transform between the two systems.
-	// This transformation must support both rotation and translation.
-	//
+    // The observations are given in the VEHICLE'S coordinate system. The particles are located
+    // according to the MAP'S coordinate system. It's necessary to transform between the two systems.
+    // This transformation must support both rotation and translation.
+    //
     // The following is a good resource for the theory:
-	//   https://www.willamette.edu/~gorr/classes/GeneralGraphics/Transforms/transforms2d.htm
-	// and the following is a good resource for the actual equation to implement (look at equation 3.33):
-	//   http://planning.cs.uiuc.edu/node99.html
+    //   https://www.willamette.edu/~gorr/classes/GeneralGraphics/Transforms/transforms2d.htm
+    // and the following is a good resource for the actual equation to implement (look at equation 3.33):
+    //   http://planning.cs.uiuc.edu/node99.html
     for (int i = 0; i < num_particles; i++) {
         // Transform the observations from the car's perspective to the particle's perspective.
         // The transform calculates where the observation would appear on the map if observed
         // from the particle's perspective.
 
 #if 0
-        cout << "transformed observations, particle " << i << endl;
+        cout << "transformed observations for particle " << i << endl;
         cout << "-------------------------------------" << endl;
+        cout << "  position    x: " << particles[i].x << " y: " << particles[i].y << endl << endl;
 #endif
         std::vector<LandmarkObs> transformed_observations(observations.size());
         for (int j = 0 ; j < observations.size(); j++) {
             transformed_observations[j] = transform_coords(particles[i], observations[j]);
         }
-#if 0
-        cout << endl;
-#endif
 
         // Generate list of all landmarks that are within sensor range of the particle's predicted position
         std::vector<LandmarkObs> predicted_landmarks;
@@ -229,39 +223,88 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 #if 0
         cout << "particle(" << i << ")" << endl;
         cout << "------------------" << endl;
-#endif
         int k = 0;
+#endif
         for (LandmarkObs observation : transformed_observations) {
             // calculate the multivariate gaussian probability
             double p = measurement_prob(observation, map_landmarks.landmark_list[observation.id], std_landmark);
             particles[i].weight *= p;
 #if 0
-            cout << "  obs(" << k++ << ") probability: " << p << endl;
+            cout << "  observation(" << k++ << ") probability: " << p << endl;
 #endif
         }
+        weights[i] = particles[i].weight;
 #if 0
-        cout << "  weight: " << particles[i].weight << endl;
+        cout << endl << "  weight: " << weights[i] << endl << endl;
 #endif
     }
 }
 
 void ParticleFilter::resample() {
-	// TODO: Resample particles with replacement with probability proportional to their weight. 
-	// NOTE: You may find std::discrete_distribution helpful here.
-	//   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
+    // Resample particles with replacement with probability proportional to their weight.
 
-    // resample using resampling wheel (careful, this is using shallow copy)
-    //    p3 = []
-    //    index = int(random.random() * self.N)  # pick a random starting point postion on the wheel
-    //    beta = 0.0
-    //    mw = max(w) # resampling wheel is weighted toward selecting the highest measurement probability
-    //    for i in range(self.N):
-    //        beta += random.random() * 2.0 * mw
-    //        while beta > w[index]:
-    //            beta -= w[index]
-    //            index = (index + 1) % self.N
-    //        p3.append(self.particles[index])
-    //    self.particles = p3
+#if 0
+    weights[0] = 0.45f;
+    weights[1] = 0.93f;
+    weights[2] = 0.2f;
+    weights[3] = 0.15f;
+    weights[4] = 0.02f;
+    weights[5] = 0.05f;
+    weights[6] = 0.12f;
+    weights[7] = 0.25f;
+    weights[8] = 0.95f;
+    weights[9] = 0.48f;
+#endif
+
+#if 0
+    // resample using resampling wheel
+    float fraction = ((float)rand()/(float)(RAND_MAX));
+    int index = int(fraction * (float)num_particles);  // pick a random starting point position on the wheel
+    double beta = 0.0;
+    // resampling wheel is weighted toward selecting the highest measurement probability
+    double mw = *max_element(weights.begin(), weights.end());
+    cout << "max element: " << mw << endl;
+    cout << "resampling" << endl;
+    cout << "----------" << endl;
+    std::vector<Particle> resampled;
+    for (int i = 0; i < num_particles; i++) {
+        fraction = ((float)rand()/(float)(RAND_MAX)); // generates a float between 0.0 and 1.0
+        beta += fraction * 2.0 * mw;
+        while (beta > weights[index]) {
+            beta -= weights[index];
+            index = (index + 1) % num_particles;
+        }
+        cout << "  selected " << index << endl;
+        resampled.push_back(particles[index]);
+    }
+#else
+    // resample using std::discrete_distribution
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::discrete_distribution<> distribution(weights.begin(), weights.end());
+#if 0
+    cout << "resampling" << endl;
+    cout << "----------" << endl;
+#endif
+    std::vector<Particle> resampled;
+    int index;
+    for(int n=0; n<num_particles; n++) {
+        index = distribution(gen);
+#if 0
+        cout << "  selected " << index << endl;
+#endif
+        resampled.push_back(particles[index]);
+    }
+#if 0
+    cout << endl;
+#endif
+
+#endif
+
+    particles.clear();
+    for (Particle p : resampled) {
+      particles.push_back(p);
+    }
 }
 
 Particle ParticleFilter::SetAssociations(Particle particle, std::vector<int> associations, std::vector<double> sense_x, std::vector<double> sense_y)
