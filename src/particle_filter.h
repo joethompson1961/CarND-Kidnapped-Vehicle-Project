@@ -12,7 +12,6 @@
 #include "helper_functions.h"
 
 struct Particle {
-
 	int id;
 	double x;
 	double y;
@@ -22,7 +21,6 @@ struct Particle {
 	std::vector<double> sense_x;
 	std::vector<double> sense_y;
 };
-
 
 
 class ParticleFilter {
@@ -72,6 +70,8 @@ public:
 	 */
 	void prediction(double delta_t, double std_pos[], double velocity, double yaw_rate);
 	
+	void predict_landmarks(Particle particle, double sensor_range, Map map, std::vector<LandmarkObs>& predicted_landmarks);
+
 	/**
 	 * dataAssociation Finds which observations correspond to which landmarks (likely by using
 	 *   a nearest-neighbors data association).
@@ -100,7 +100,7 @@ public:
 
 	/*
 	 * Set a particles list of associations, along with the associations calculated world x,y coordinates
-	 * This can be a very useful debugging tool to make sure transformations are correct and assocations correctly connected
+	 * This can be a very useful debugging tool to make sure transformations are correct and associations correctly connected
 	 */
 	Particle SetAssociations(Particle particle, std::vector<int> associations, std::vector<double> sense_x, std::vector<double> sense_y);
 	
@@ -114,6 +114,8 @@ public:
 	const bool initialized() const {
 		return is_initialized;
 	}
+
+	void printParticles();
 };
 
 
