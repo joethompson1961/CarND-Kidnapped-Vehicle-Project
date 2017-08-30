@@ -242,20 +242,6 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
 void ParticleFilter::resample() {
     // Resample particles with replacement with probability proportional to their weight.
-
-#if 0
-    weights[0] = 0.45f;
-    weights[1] = 0.93f;
-    weights[2] = 0.2f;
-    weights[3] = 0.15f;
-    weights[4] = 0.02f;
-    weights[5] = 0.05f;
-    weights[6] = 0.12f;
-    weights[7] = 0.25f;
-    weights[8] = 0.95f;
-    weights[9] = 0.48f;
-#endif
-
 #if 0
     // resample using resampling wheel
     float fraction = ((float)rand()/(float)(RAND_MAX));
@@ -282,23 +268,12 @@ void ParticleFilter::resample() {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::discrete_distribution<> distribution(weights.begin(), weights.end());
-#if 0
-    cout << "resampling" << endl;
-    cout << "----------" << endl;
-#endif
     std::vector<Particle> resampled;
     int index;
     for(int n=0; n<num_particles; n++) {
         index = distribution(gen);
-#if 0
-        cout << "  selected " << index << endl;
-#endif
         resampled.push_back(particles[index]);
     }
-#if 0
-    cout << endl;
-#endif
-
 #endif
 
     particles.clear();
