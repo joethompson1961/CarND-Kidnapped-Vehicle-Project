@@ -25,111 +25,6 @@ std::string hasData(std::string s) {
   return "";
 }
 
-//int main()
-//{
-//    //Set up parameters here
-//    double delta_t = 0.1; // Time elapsed between measurements [sec]
-//    double sensor_range = 50; // Sensor range [m]
-//
-//    double sigma_pos [3] = {0.3, 0.3, 0.01}; // GPS measurement uncertainty [x [m], y [m], theta [rad]]
-//    double sigma_landmark [2] = {0.3, 0.3}; // Landmark measurement uncertainty [x [m], y [m]]
-//
-//    // Read map data
-//#if 1
-//    Map map;
-//    if (!read_map_data("../data/map_data.txt", map)) {
-//        cout << "Error: Could not open map file" << endl;
-//        return -1;
-//    }
-//#else
-//    Map::single_landmark_s lm;
-//    lm.id_i = 1;
-//    lm.x_f = 5;
-//    lm.y_f = 3;
-//    map.landmark_list.push_back(lm);
-//    lm.id_i = 2;
-//    lm.x_f = 2;
-//    lm.y_f = 1;
-//    map.landmark_list.push_back(lm);
-//    lm.id_i = 3;
-//    lm.x_f = 6;
-//    lm.y_f = 1;
-//    map.landmark_list.push_back(lm);
-//    lm.id_i = 4;
-//    lm.x_f = 7;
-//    lm.y_f = 4;
-//    map.landmark_list.push_back(lm);
-//    lm.id_i = 5;
-//    lm.x_f = 4;
-//    lm.y_f = 7;
-//    map.landmark_list.push_back(lm);
-//#endif
-//
-//    cout << "Map landmarks" << endl;
-//    cout << "-------------" << endl;
-//    int k = 0;
-//    for (Map::single_landmark_s lm : map.landmark_list) {
-//        cout << "  " << k << ": x = " << lm.x_f << "   y = " << lm.y_f << endl;
-//    }
-//    cout  << endl;
-//
-//    // Create particle filter
-//    ParticleFilter pf;
-//
-//    // Sense noisy position data from the simulator
-//    double sense_x = 2.0f;
-//    double sense_y = 5.0f;
-//    double sense_theta = 0.0f;
-//
-//    pf.init(sense_x, sense_y, sense_theta, sigma_pos);
-//
-//    pf.printParticles();
-//
-//    // Predict the vehicle's next state from previous (noiseless control) data.
-//    double previous_velocity = 2.0f;
-//    double previous_yawrate = 0.0f;
-//
-//    pf.prediction(delta_t, sigma_pos, previous_velocity, previous_yawrate);
-//
-//    vector<LandmarkObs> noisy_observations;
-//    string sense_observations_x = "2  3  0";
-//    string sense_observations_y = "2 -2 -4";
-//
-//    std::vector<float> x_sense;
-//    std::istringstream iss_x(sense_observations_x);
-//
-//    std::copy(std::istream_iterator<float>(iss_x),
-//    std::istream_iterator<float>(),
-//    std::back_inserter(x_sense));
-//
-//    std::vector<float> y_sense;
-//    std::istringstream iss_y(sense_observations_y);
-//
-//    std::copy(std::istream_iterator<float>(iss_y),
-//    std::istream_iterator<float>(),
-//    std::back_inserter(y_sense));
-//
-//    for(int i = 0; i < x_sense.size(); i++)
-//    {
-//        LandmarkObs obs;
-//        obs.x = x_sense[i];
-//        obs.y = y_sense[i];
-//        noisy_observations.push_back(obs);
-//    }
-//
-//    cout << "Observations" << endl;
-//    cout << "------------" << endl;
-//    for (LandmarkObs obs : noisy_observations) {
-//        cout << "  x:" << obs.x << "  y:" << obs.y << endl;
-//    }
-//    cout << endl;
-//
-//    // Update the weights and resample
-//    pf.updateWeights(sensor_range, sigma_landmark, noisy_observations, map);
-//    pf.resample();
-//}
-
-
 int main()
 {
     uWS::Hub h;
@@ -188,18 +83,16 @@ int main()
                     string sense_observations_y = j[1]["sense_observations_y"];
 
                     std::vector<float> x_sense;
-                    std::istringstream iss_x(sense_observations_x);
-
+                    std::istringstream iss_x(sense_observations_x);  // parse array of sensor observations x positions
                     std::copy(std::istream_iterator<float>(iss_x),
-                    std::istream_iterator<float>(),
-                    std::back_inserter(x_sense));
+                            std::istream_iterator<float>(),
+                            std::back_inserter(x_sense));
 
                     std::vector<float> y_sense;
-                    std::istringstream iss_y(sense_observations_y);
-
+                    std::istringstream iss_y(sense_observations_y);  // parse array of sensor observations x positions
                     std::copy(std::istream_iterator<float>(iss_y),
-                    std::istream_iterator<float>(),
-                    std::back_inserter(y_sense));
+                            std::istream_iterator<float>(),
+                            std::back_inserter(y_sense));
 
                     for(int i = 0; i < x_sense.size(); i++)
                     {

@@ -69,7 +69,6 @@ void ParticleFilter::printParticles() {
     cout << endl;
 }
 
-
 void ParticleFilter::prediction(double delta_t, double std_pos[], double velocity, double yaw_rate) {
     // Update each particle's predicted pose (x, y, theta) based on the measured
     // controls (delta_t, velocity, yaw_rate) and add random Gaussian noise.
@@ -89,12 +88,15 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
         double huh = velocity / yaw_rate;           // pre-calculated for loop performance
         for (int i = 0; i < num_particles; ++i) {
 
+            // Estimate next x:  use x portion of measured  velocity vector adjusted for rate of turn
             particles[i].x += huh * (sin(particles[i].theta + delta_theta) - sin(particles[i].theta));
             particles[i].x += dist_x(gen);          // add noise
 
+            // Estimate next y:  use y portion of measured velocity vector adjusted for rate of turn
             particles[i].y += huh * (cos(particles[i].theta) - cos(particles[i].theta + delta_theta));
             particles[i].y += dist_y(gen);          // add noise
 
+            // Estimate next heading based on measured rate of change in yaw.
             particles[i].theta += delta_theta;
             particles[i].theta += dist_theta(gen);  // add noise
         }

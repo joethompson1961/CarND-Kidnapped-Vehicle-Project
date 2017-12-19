@@ -13,10 +13,10 @@
 
 struct Particle {
 	int id;
-	double x;
-	double y;
-	double theta;
-	double weight;
+	double x;       // particle's x position
+	double y;       // particle's y position
+	double theta;   // particle's heading
+	double weight;  // probability that this particle matches to the measured landmarks
 	std::vector<int> associations;
 	std::vector<double> sense_x;
 	std::vector<double> sense_y;
